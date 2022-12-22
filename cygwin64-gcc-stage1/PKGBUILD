@@ -1,0 +1,93 @@
+# Maintainer: Ookiineko <chiisaineko@protonmail.com>
+# Contributor: Yaakov Selkowitz <yselkowi@redhat.com>
+# Contributor: Felix Yan <felixonmars@archlinux.org>
+
+pkgname=cygwin64-gcc-stage1
+pkgver=11.3.0
+pkgrel=2
+pkgdesc="Stage1 cross GCC for 64-bit Cygwin cross-compiler"
+arch=('x86_64' 'aarch64')
+url="https://gcc.gnu.org"
+license=('GPL' 'LGPL' 'FDL' 'custom')
+groups=('cygwin64-toolchain' 'cygwin64')
+depends=('zlib' 'libisl' 'libmpc' 'cygwin64-binutils')
+makedepends=("gcc-ada>=${pkgver:0:2}")
+conflicts=('cygwin64-gcc')
+provides=('cygwin64-gcc')
+options=('!strip' 'staticlibs' '!emptydirs' '!buildflags' '!libtool')
+source=("https://ftp.gnu.org/gnu/gcc/gcc-${pkgver}/gcc-${pkgver}.tar.xz"
+        0002-Cygwin-add-dummy-pthread-tsaware-and-large-address-a.patch
+        0003-Cygwin-handle-dllimport-properly-in-medium-model-V2.patch
+        0004-Cygwin-MinGW-skip-test.patch
+        0006-Cygwin-fix-some-implicit-declaration-warnings-and-re.patch
+        0007-Cygwin-__cxa-atexit.patch
+        0008-Cygwin-libgomp-soname.patch
+        0009-Cygwin-g-time.patch
+        0010-Cygwin-newlib-ftm.patch
+        0011-Cygwin-define-STD_UNIX.patch
+        1001-textdomain.patch
+        1002-cygwin-ld-flags.patch)
+sha512sums=('f0be5ad705c73b84477128a69c047f57dd47002f375eb60e1e842e08cf2009a509e92152bca345823926d550b7395ae6d4de7db51d1ee371c2dc37313881fca7'
+            '2c6bdd07fb2733f7d2cdcec7eb0315708146bbfda22635e9a7a384bf3147f0d85e941b50c5f097b8ee2eaf16379c612eb30e5d62b29b41f362ca044b56e97cac'
+            '5f529c8cd0c4d1ea551f8f67ce692d037557df41959633905a0ef41620d919aabffc7907dbc59acc03a4241535a515adf1292c1bb89336c369af43141774cdb6'
+            'ee573907bccaffcc112700ca0750eac2702b61da308582127bf1e07f1573bc841d6a10aa8d4727cbb602a518673fa7285092ef23e3b19d5d7a4607e958367a0e'
+            '64b3878a3536b848a26b3f50947a46fc08232d049ff0d6a178074b58e3152b4af03d6fbb96bfa5367cfdd9d556a6459a4ba8be10747972269066a428b9aa2184'
+            'a3f7424dc08fdd7363e6ea715afc2983f8aa7ecdb5021802be353a7d1d092bcf78fda0ef645ca3440885bae70ff27b653581bbdd9833d3fb4ecfc16ae85e175c'
+            'b5db5db133d4efb7dc5ad0397b3a4ffd33df860e8c961c6b9bda676579f5d125147ffb8c897178c40ccd3018c6d5e86ee8434f82fbae3029c327b4825d128e5d'
+            '0808dea0e7ae115acbd8716546d1931390751c4836365f4954801021d63a5615e451c1a7f4c0b8894873b1eb30c458f1b881c513c34c5de16ff6561180c4619d'
+            '2a665ff22f0e13e507c398c56663748aeb4111ebda3c0ecaab0b5866211ef6c68efaa287986398eedab995a0d893899333c7ed5d8c966657d99123a0fe13d3d2'
+            '5494febafc61b53d2d48d93be905412bdd1e74c2b66978c7fa737e37f08b67f59c8e2a769b1241cb6d3b531da33d0f7a8abc10391d3b06237f271382df222207'
+            '6ae9db0352077c9b1e6ef55e10c2b57070fedf1aea1bf098da3e02d1e48875f311209913bbf109900e4214dc19661dc4005088c295c7c6871b658cf07ae23e0a'
+            '3b679c745fc73360a1346a753eec7c32a955663560de94799ba1ce77648d36de4cf5d5abe7857a5a3e6fb79aa6005f7c34229315a2784f5a5535d9734830aa49')
+
+_target="x86_64-pc-cygwin"
+
+prepare() {
+  ln -sf gcc-${pkgver/+/-} gcc
+  cd gcc
+
+  patch -p1 -i "${srcdir}"/0002-Cygwin-add-dummy-pthread-tsaware-and-large-address-a.patch
+  patch -p1 -i "${srcdir}"/0003-Cygwin-handle-dllimport-properly-in-medium-model-V2.patch
+  patch -p1 -i "${srcdir}"/0004-Cygwin-MinGW-skip-test.patch
+  patch -p1 -i "${srcdir}"/0006-Cygwin-fix-some-implicit-declaration-warnings-and-re.patch
+  patch -p1 -i "${srcdir}"/0007-Cygwin-__cxa-atexit.patch
+  patch -p1 -i "${srcdir}"/0008-Cygwin-libgomp-soname.patch
+  patch -p1 -i "${srcdir}"/0009-Cygwin-g-time.patch
+  patch -p1 -i "${srcdir}"/0010-Cygwin-newlib-ftm.patch
+  patch -p1 -i "${srcdir}"/0011-Cygwin-define-STD_UNIX.patch
+  patch -p1 -i "${srcdir}"/1001-textdomain.patch
+  patch -p1 -i "${srcdir}"/1002-cygwin-ld-flags.patch
+
+  # mmapio.c:69:14: error: implicit declaration of function ‘getpagesize’
+  sed -i 's|\-Werror||g' libbacktrace/configure
+}
+
+build() {
+  mkdir -p "${srcdir}"/build && cd "${srcdir}"/build
+  "${srcdir}"/gcc/configure --prefix=/usr --libexecdir=/usr/lib \
+      --target=${_target} --with-tune=generic \
+      --with-gnu-as --with-gnu-ld --verbose \
+      --with-bugurl=https://github.com/ookiineko/arch-cygwin64/issues \
+      --enable-languages=c,lto,c++,fortran \
+      --enable-shared --enable-static \
+      --disable-win32-registry \
+      --enable-version-specific-runtime-libs \
+      --enable-threads=posix --enable-fully-dynamic-string \
+      --enable-__cxa_atexit --with-dwarf2 --enable-graphite \
+      --disable-libcc1 --disable-symvers --disable-libssp \
+      --with-default-libstdcxx-abi=gcc4-compatible \
+      --with-system-zlib --enable-cloog-backend=isl \
+      --enable-lto --disable-multilib --enable-checking=release
+  make all-gcc
+}
+
+package() {
+  cd "${srcdir}"/build
+  make DESTDIR="${pkgdir}" install-gcc
+  strip "${pkgdir}"/usr/bin/${_target}-*
+  strip "${pkgdir}"/usr/lib/gcc/${_target}/${pkgver}/{cc1*,collect2,f951,lto*}
+  ln -s ${_target}-gcc "${pkgdir}"/usr/bin/${_target}-cc
+  strip "${pkgdir}"/usr/bin/*
+  # remove unnecessary files
+  rm -r "${pkgdir}"/usr/share
+}
