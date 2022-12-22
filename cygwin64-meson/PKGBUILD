@@ -1,0 +1,40 @@
+# Maintainer: Ookiineko <chiisaineko@protonmail.com>
+# Contributor: drakkan <nicola.murino at gmail dot com>
+pkgname=cygwin64-meson
+pkgver=128
+pkgrel=4
+arch=('any')
+pkgdesc="Meson wrapper for 64-bit cygwin"
+depends=('meson' 'cygwin64-gcc' 'cygwin64-pkg-config')
+makedepends=('cygwin64-environment')
+optdepends=('cygwin64-wine: Set NEED_WINE env variable in your PKGBUILD to use wine support in meson'
+  'cygwin64-cmake')
+license=("GPL")
+url="http://copr-dist-git.fedorainfracloud.org/git/yselkowitz/cygwin/cygwin-filesystem.git"
+source=("toolchain_generator.py"
+        "meson-cygwin64-wrapper")
+sha256sums=('22948bfa919f99fc9b06363b5aa7bf11883b2685fdce1eaf7b3925611747492c'
+            '3644244e2f14e837e3db87176dc3b943b3fee0f1bf5c79bec7369f47c5f1fe97')
+_target="x86_64-pc-cygwin"
+
+build() {
+  unset CPPFLAGS
+  unset CFLAGS
+  unset CXXFLAGS
+  unset LDFLAGS
+  source cygwin64-env
+  python toolchain_generator.py --output-file toolchain-${_target}.meson 
+  python toolchain_generator.py --output-file toolchain-${_target}-wine.meson --need-exe-wrapper 
+  sed "s|@TRIPLE@|${_target}|g;" meson-cygwin64-wrapper > ${_target}-meson
+}
+
+package() {
+  install -d "${pkgdir}"/usr/bin
+  install -d "${pkgdir}"/usr/share/cygwin64
+  install -m 755 "${srcdir}/toolchain_generator.py" "$pkgdir/usr/bin/meson-cross-file-generator"
+  install -m 755 "${srcdir}/${_target}-meson" "$pkgdir/usr/bin/${_target}-meson"
+  install -m 644 toolchain-${_target}.meson "${pkgdir}"/usr/share/cygwin64/
+  install -m 644 toolchain-${_target}-wine.meson "${pkgdir}"/usr/share/cygwin64/
+}
+
+# vim: ts=2 sw=2 et:
