@@ -1,0 +1,28 @@
+pkgname=cygwin64-wine
+pkgver=1
+pkgrel=9
+arch=('any')
+pkgdesc="Wine wrapper for 64-bit Cygwin"
+depends=('wine')
+license=("MIT")
+url="https://copr.fedorainfracloud.org/coprs/yselkowitz/cygwin/"
+source=("cygwin64-wine.sh" "cygwin64-msiexec.sh" "cygwin64-winepath.sh")
+sha256sums=('4d2bca71cc0506e3ffabbb75b13f2cda8c904d245411faa05503e19fddb37a99'
+            '581839c6604b8e32d51041d429108f173f58b02084918157ae86f44f0c36b2e8'
+            'bdbb70c664c173530163988915419f9ee4ba8fac2e80d8e2e61d4b4cec7b0831')
+
+_target="x86_64-pc-cygwin"
+
+build() {
+  sed "s|@TRIPLE@|${_target}|g" cygwin64-wine.sh > ${_target}-wine
+  sed "s|@TRIPLE@|${_target}|g" cygwin64-msiexec.sh > ${_target}-msiexec
+  sed "s|@TRIPLE@|${_target}|g" cygwin64-winepath.sh > ${_target}-winepath
+}
+
+package() {
+  install -d "${pkgdir}"/usr/bin
+  install -m 755 ${_target}-wine "${pkgdir}"/usr/bin/
+  install -m 755 ${_target}-msiexec "${pkgdir}"/usr/bin/
+  install -m 755 ${_target}-winepath "${pkgdir}"/usr/bin/
+}
+
