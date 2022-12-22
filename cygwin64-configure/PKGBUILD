@@ -1,0 +1,21 @@
+pkgname=cygwin64-configure
+pkgver=128
+pkgrel=4
+arch=('any')
+pkgdesc="configure wrapper for 64-bit Cygwin"
+depends=('cygwin64-gcc' 'cygwin64-pkg-config' 'cygwin64-environment')
+license=("GPL")
+url="http://copr-dist-git.fedorainfracloud.org/git/yselkowitz/cygwin/cygwin-filesystem.git"
+source=("cygwin64-configure.sh")
+md5sums=('2c7330fb4c9f2364112687040db3687b')
+
+_target="x86_64-pc-cygwin"
+
+build() {
+  sed "s|@TRIPLE@|${_target}|g" cygwin64-configure.sh > ${_target}-configure
+}
+
+package() {
+  install -d "${pkgdir}"/usr/bin
+  install -m 755 ${_target}-configure "${pkgdir}"/usr/bin/
+}
