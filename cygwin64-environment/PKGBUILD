@@ -1,0 +1,14 @@
+pkgname=cygwin64-environment
+pkgver=128
+pkgrel=4
+arch=('any')
+pkgdesc="Script providing common environment variables and functions for 64-bit Cygwin"
+license=("GPL")
+url="https://copr.fedorainfracloud.org/coprs/yselkowitz/cygwin/"
+source=("cygwin64-env.sh")
+sha256sums=('892b5108cb8d6dabad7178a57acaad763bdbfca874aaccafd581a721f865cf17')
+
+package() {
+  install -d "${pkgdir}"/usr/bin
+  install -m 755 cygwin64-env.sh "${pkgdir}"/usr/bin/cygwin64-env
+}
