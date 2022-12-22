@@ -1,0 +1,23 @@
+pkgname=cygwin64-pkg-config
+pkgver=128
+pkgrel=4
+pkgdesc='Support pkg-config script (does not depend on any particular version of pkg-config). Useful for pkg-config powered cross-compiling with 64-bit Cygwin, see http://tinyurl.com/pkg-config-cross for more info'
+arch=('any')
+url='http://pkg-config.freedesktop.org/'
+license=('zlib')
+depends=('pkg-config')
+source=('cygwin64-pkgconfig.sh')
+install='cygwin64-pkg-config.install'
+md5sums=('6ab3b0ec827dbad9cd417e4b1711a62c')
+
+_target="x86_64-pc-cygwin"
+
+build() {
+  sed "s|@TRIPLE@|${_target}|g" cygwin64-pkgconfig.sh > ${_target}-pkg-config
+}
+
+package() {
+  # This indeed has to go to the "normal" directory tree
+  install -d ${pkgdir}/usr/bin
+  install -m755 ${_target}-pkg-config  ${pkgdir}/usr/bin
+}
