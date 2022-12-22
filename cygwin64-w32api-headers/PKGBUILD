@@ -1,0 +1,32 @@
+# Maintainer: Ookiineko <chiisaineko@protonmail.com>
+# Contributor: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Yaakov Selkowitz <yselkowi@redhat.com>
+
+pkgname=cygwin64-w32api-headers
+pkgver=10.0.0
+pkgrel=1
+pkgdesc="Win32 header files for 64-bit Cygwin toolchain"
+arch=('any')
+url="http://mingw-w64.sourceforge.net"
+license=('custom')
+groups=('cygwin64-toolchain' 'cygwin64')
+options=('!strip' '!libtool' '!emptydirs')
+source=(https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/mingw-w64-v${pkgver}.tar.bz2)
+sha512sums=('3c0827af7c40809a867758f6cd9ef3ff0c988b43082345bf725e03949af95968d634ace99a7ffae323189549221dcb5d861de9e801f1fbc7904e446641b60516')
+
+_target="x86_64-pc-cygwin"
+
+build() {
+  mkdir -p "$srcdir"/headers && cd "$srcdir"/headers
+  "$srcdir"/mingw-w64-v${pkgver}/mingw-w64-headers/configure --host=${_target} --prefix=/usr/${_target} --includedir=/usr/${_target}/include/w32api --enable-w32api
+}
+
+package() {
+  cd "$srcdir"/headers
+  make DESTDIR="$pkgdir" install
+
+  echo "Installing MinGW-w64 licenses"
+  install -Dm644 "$srcdir"/mingw-w64-v${pkgver}/COPYING.MinGW-w64/COPYING.MinGW-w64.txt "$pkgdir"/usr/share/licenses/${pkgname}/COPYING.MinGW-w64.txt
+  install -Dm644 "$srcdir"/mingw-w64-v${pkgver}/COPYING.MinGW-w64-runtime/COPYING.MinGW-w64-runtime.txt "$pkgdir"/usr/share/licenses/${pkgname}/COPYING.MinGW-w64-runtime.txt
+  install -Dm644 "$srcdir"/mingw-w64-v${pkgver}/mingw-w64-headers/ddk/readme.txt "$pkgdir"/usr/share/licenses/${pkgname}/ddk-readme.txt
+}
