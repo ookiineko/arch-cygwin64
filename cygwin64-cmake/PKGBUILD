@@ -1,0 +1,28 @@
+pkgname=cygwin64-cmake
+pkgver=128
+pkgrel=4
+arch=('any')
+pkgdesc="CMake wrapper for 64-bit Cygwin"
+depends=('cmake' 'cygwin64-gcc' 'cygwin64-pkg-config' 'cygwin64-environment')
+optdepends=('cygwin64-wine: runtime support')
+license=("GPL")
+url="https://copr-dist-git.fedorainfracloud.org/cgit/yselkowitz/cygwin/cygwin-filesystem.git"
+source=("cygwin64-cmake.sh"
+        "toolchain-cygwin64.cmake")
+sha256sums=('d961de7e7493346c50ea11ca48862f86054dbaad432f6da5199fbbbb75c0e2df'
+            'b1328bfcc27da40f0408935aacab3887d7ebbee2650e7c8409a7ab89924ca307')
+
+_target="x86_64-pc-cygwin"
+
+build() {
+  sed "s|@TRIPLE@|${_target}|g;s|@PROCESSOR@|${_target::-10}|g" toolchain-cygwin64.cmake > toolchain-${_target}.cmake
+  sed "s|@TRIPLE@|${_target}|g" cygwin64-cmake.sh > ${_target}-cmake
+}
+
+package() {
+  install -d "${pkgdir}"/usr/bin
+  install -d "${pkgdir}"/usr/share/cygwin64
+  install -m 644 toolchain-${_target}.cmake "${pkgdir}"/usr/share/cygwin64/
+  install -m 755 ${_target}-cmake "${pkgdir}"/usr/bin/
+}
+
