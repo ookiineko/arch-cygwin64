@@ -1,0 +1,59 @@
+# Maintainer: Ookiineko <chiisaineko@protonmail.com>
+# Contributor: Yaakov Selkowitz <yselkowi@redhat.com>
+# Contributor: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Alexey Pavlov <alexpux@gmail.com>
+
+pkgname=cygwin64-binutils
+pkgver=2.39
+pkgrel=2
+pkgdesc="Cross-compiled version of binutils for 64-bit Cygwin environment"
+arch=('x86_64')
+url="http://www.gnu.org/software/binutils"
+license=('GPL')
+groups=('cygwin64-toolchain' 'cygwin64')
+depends=('zlib')
+options=('!libtool' '!emptydirs')
+source=("https://ftp.gnu.org/gnu/binutils/binutils-${pkgver}.tar.gz"
+        binutils-2.37-cygwin-config-rpath.patch
+        w32api-sysroot.patch
+        binutils-textdomain.patch
+        0050-bfd-Increase-_bfd_coff_max_nscns-to-65279.patch)
+sha512sums=('b446f60e03c88d70e37089240b7ef563da31fbbf5f41a4de4cf576fa33ab1b184714657eac88aa05b5a051524af9fb9ec12a90d0bb33b16d181a4eb4aa388842'
+            '048dc954e0f710f82ec6681a5dc2fab5336071edb61248b73388acb66ed69edbb3671e9e2da256d47597c5a20e2fab219b292236189be1f603ea76100acbb242'
+            '4ce735936a35133fed20328729c62019b4b072249f341dce29c48db1f978bb627a8b9dc33a18df483299e003eca74e583d22de666f48fd88b2db80f63d53e327'
+            'a32a533db72fa5dcc3fd42d2df9c7fafc211c15e8c9d54e423d177e93250d70508c6d743a4b22ef6429a04981fa92e3795aceb2cd3be60ac1fbe1a0dba4e1d28'
+            'f0c578ceead32cb81bdc24293d261d3a804cb75df0bdeed984a11405bf34949535c2c37fbcadd50ee49025df260c385639547684a655a526363ec0e920556c0d')
+
+_target="x86_64-pc-cygwin"
+
+prepare() {
+  cd "$srcdir"/binutils-${pkgver}
+  patch -p1 -i ../binutils-2.37-cygwin-config-rpath.patch
+  patch -p1 -i ../w32api-sysroot.patch
+  patch -p1 -i ../binutils-textdomain.patch
+  patch -p1 -i ../0050-bfd-Increase-_bfd_coff_max_nscns-to-65279.patch
+  #do not install libiberty
+  sed -i 's/install_to_$(INSTALL_DEST) //' libiberty/Makefile.in
+}
+
+build() {
+  mkdir -p "$srcdir"/build && cd "$srcdir"/build
+  "$srcdir"/binutils-${pkgver}/configure --prefix=/usr \
+      --target=${_target} \
+      --infodir=/usr/share/info/${_target} \
+      --enable-lto --enable-plugins \
+      --enable-deterministic-archives \
+      --with-system-zlib \
+      --disable-multilib --disable-nls \
+      --disable-werror --disable-gdb \
+      --disable-libdecnumber --disable-readline \
+      --disable-sim --enable-64-bit-bfd
+  make -O
+}
+
+package() {
+  cd "$srcdir"/build
+  make DESTDIR="$pkgdir" install
+
+  rm "$pkgdir"/usr/lib/bfd-plugins/libdep.so
+}
